@@ -5,7 +5,7 @@ from modelo.Pid import PID
 from modelo.Sensor import Sensor
 from modelo.Elevador import Elevador
 from i2c.Bmp280 import bmp280_device
-from i2c.Oled import oled_display 
+from i2c.Oled import oled_display
 import time
 import struct
 import threading
