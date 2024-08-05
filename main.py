@@ -5,7 +5,7 @@ from modelo.Pid import PID
 from modelo.Sensor import Sensor
 from modelo.Elevador import Elevador
 from i2c.Bmp280 import bmp280_device
-from i2c.Oled import oled_display
+# from i2c.Oled import oled_display
 import time
 import struct
 import threading
@@ -16,7 +16,7 @@ sensor = Sensor()
 uart = Uart()
 pid = PID()
 bmp280 = bmp280_device()
-display_oled = oled_display()  # Usando display OLED SSD1306
+# display_oled = oled_display()  # Usando display OLED SSD1306
 elevador = Elevador()
 
 # Variáveis Globais
@@ -128,13 +128,13 @@ def displayStatus():
 
         if elevador.getFila():
             andar = elevador.getFila()[0].replace('S', 'A')
-            display_oled.display(f'{motor.getStatus()}: {andar}', 1)
-        display_oled.display(f'Temp: {temperatura} C', 0)
+        #     display_oled.display(f'{motor.getStatus()}: {andar}', 1)
+        # display_oled.display(f'Temp: {temperatura} C', 0)
 
         comando('temperatura', temperatura)
         time.sleep(1)
 
-    display_oled.clear()  # Limpa o display ao finalizar
+    # display_oled.clear()  # Limpa o display ao finalizar
 
 def calibracao():
     """

@@ -6,7 +6,7 @@ class Uart:
     def __init__(self):
         self.serial = None
         self.connected = False
-        
+
     def conectar(self):
         """
         Conecta à porta serial.
@@ -15,7 +15,7 @@ class Uart:
             self.serial.close()
             
         try:
-            self.serial = serial.Serial("/dev/serial0", 115200)  # Abre a porta serial
+            self.serial = serial.Serial("/dev/serial0", 115200)  
             self.connected = True
             print('Conexão UART estabelecida')
         except Exception as e:
@@ -34,15 +34,15 @@ class Uart:
         """
         Verifica se o valor do CRC no final do buffer corresponde ao CRC calculado dos bytes anteriores no buffer.
         """
-        crc_size = 2  # CRC tem 2 bytes
-        
+
+        crc_size = 2
         if len(buffer) < crc_size:
-            return False  # buffer muito pequeno para conter um CRC válido
-        
-        # bytes do buffer que contêm o CRC
+            return False
         crc_buf = buffer[-crc_size:]
-        # calcula o valor do CRC para os bytes no buffer, excluindo o CRC
         crc = calcula_crc(buffer[:-crc_size], buffer_size - crc_size).to_bytes(crc_size, 'little')
+        
+        print(f'CRC Recebido: {crc_buf.hex()}')
+        print(f'CRC Calculado: {crc.hex()}')
         
         return crc_buf == crc
 
@@ -55,12 +55,19 @@ class Uart:
                 self.conectar()
             
             buffer = self.serial.read(tam)
+            if not buffer:
+                print('Erro: Nenhum dado lido da UART')
+                return None
+            
+            print(f'Dados lidos: {buffer.hex()}')  # Mensagem de debug para verificar os dados lidos
+            
             dados = buffer[3:-2] if not botao else buffer[2:-2]
             
             if self.validate_crc(buffer, len(buffer)):
                 return dados
             else:
-                print('Dados incorretos: ', buffer)
+                print('Erro de CRC: Dados incorretos: ', buffer)
+                return None
         except Exception as e:
             print(f'Erro na leitura: {str(e)}')
             return None
@@ -69,12 +76,13 @@ class Uart:
         """
         Escreve dados no encoder via conexão serial, adicionando o CRC aos dados.
         """
-        if not self.connected:
-            self.conectar()
-        
         try:
+            if not self.connected:
+                self.conectar()
+                
             msg_crc = calcula_crc(msg, tam).to_bytes(2, 'little')
             msg_final = msg + msg_crc
             self.serial.write(msg_final)
+            print(f'Mensagem enviada: {msg_final.hex()}')  # Mensagem de debug para verificar os dados enviados
         except Exception as e:
             print(f'Erro ao escrever: {e}')
