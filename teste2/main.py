@@ -1,16 +1,15 @@
-from comunicacao.Uart import Uart
-from comunicacao.CodigoModbus import getCodigo_E1, getCodigo_E2
-from modelo.Motor import Motor
-from modelo.Pid import PID
-from modelo.Sensor import Sensor
-from modelo.Elevador import Elevador
-from i2c.Bmp280 import bmp280_device
-# from i2c.OLED import OLED
+from comunicacao.UART import Uart
+from comunicacao.ModBus import getCodigo_E1, getCodigo_E2
+from controle.motor import Motor
+from controle.pid import PID
+from controle.sensor import Sensor
+from controle.elevador import Elevador
+from I2C.bmp280 import bmp280_device
+from I2C.OLED import OLED
 import time
 import struct
 import threading
 import traceback
-import os
 
 # Instâncias para o primeiro elevador
 motor1 = Motor(1)
@@ -28,7 +27,7 @@ pid2 = PID()
 uart = Uart()
 bmp280_1 = bmp280_device()
 bmp280_2 = bmp280_device()
-# display_oled = OLED()
+display_oled = OLED()
 uart_lock = threading.Lock()
 
 running = True
@@ -36,6 +35,7 @@ elevador1_movendo = False
 elevador2_movendo = False
 
 andares = ['ST', 'S1', 'S2', 'S3']
+
 
 def main():
     try:
@@ -205,13 +205,6 @@ def comando(mensagem, valor=0, botao=None, elevador=None):
             with uart_lock:
                 cmd = getCodigo_E1(mensagem, valor) if elevador.id == 1 else getCodigo_E2(mensagem, valor)
                 uart.escreverEncoder(cmd, len(cmd), skip_resp=True)
-                # uart.lerEncoder(5)
-
-        # elif mensagem == 'temperatura':
-        #     with uart_lock:
-        #         cmd = getCodigo_E1(mensagem, valor) if elevador.id == 1 else getCodigo_E2(mensagem, valor)
-        #         uart.escreverEncoder(cmd, len(cmd))
-        #         uart.lerEncoder(5)
                 
         elif mensagem == 'le_registrador':
             with uart_lock:
@@ -233,10 +226,10 @@ def comando(mensagem, valor=0, botao=None, elevador=None):
 def displayStatus():
     global running
     # print('display iniciado...')
-    # display_oled.clear()
+    display_oled.clear()
     andar1 = andar2 = -1
     if running:
-        # display_oled.clear()
+        display_oled.clear()
         try:
             temperatura1 = bmp280_1.get_temp()
             temperatura2 = bmp280_2.get_temp()
@@ -247,20 +240,20 @@ def displayStatus():
         if len(elevador1.getFila()) != 0:
             andar1 = elevador1.getFila()[0]
             andar1 = andar1.replace('S', 'A')
-            # display_oled.display_string(f'Elevador 1: {motor1.getStatus()}: {andar1}', 0)
-        # else:
-            # display_oled.display_string(f'Elevador 1: {motor1.getStatus()}', 0)
+            display_oled.display_string(f'Elevador 1: {motor1.getStatus()}: {andar1}', 0)
+        else:
+            display_oled.display_string(f'Elevador 1: {motor1.getStatus()}', 0)
         
         if len(elevador2.getFila()) != 0:
             andar2 = elevador2.getFila()[0]
             andar2 = andar2.replace('S', 'A')
-            # display_oled.display_string(f'Elevador 2: {motor2.getStatus()}: {andar2}', 2)
-        # else:
-            # display_oled.display_string(f'Elevador 2: {motor2.getStatus()}', 2)
+            display_oled.display_string(f'Elevador 2: {motor2.getStatus()}: {andar2}', 2)
+        else:
+            display_oled.display_string(f'Elevador 2: {motor2.getStatus()}', 2)
 
         if temperatura1 is not None and temperatura2 is not None:
-            # display_oled.display_string(f'Temp 1: {temperatura1:.2f} C', 4)
-            # display_oled.display_string(f'Temp 2: {temperatura2:.2f} C', 6)
+            display_oled.display_string(f'Temp 1: {temperatura1:.2f} C', 4)
+            display_oled.display_string(f'Temp 2: {temperatura2:.2f} C', 6)
 
             comando('temperatura', temperatura1, elevador=elevador1)
             comando('temperatura', temperatura2, elevador=elevador2)
@@ -270,7 +263,7 @@ def displayStatus():
         if running:
             set_alarm_display()
         
-    # display_oled.clear()
+    display_oled.clear()
 
 def calibracao(elevador, motor, sensor, pid):
     andares = ['ST', 'S1', 'S2', 'S3']
@@ -329,7 +322,7 @@ def botaoEmergencia():
     print('Emergência acionada!')
 
 def contagemPorta():
-    print('Porta aberta por 3 segundos...')
+    print('Porta aberta (3 segundos)')
     time.sleep(3)
     print('Porta fechada')
 
@@ -338,7 +331,7 @@ def encerra():
     running = False
     sensor1.stop()
     sensor2.stop()
-    # display_oled.clear()
+    display_oled.clear()
     print('Sistema encerrado')
 
 if __name__ == '__main__':

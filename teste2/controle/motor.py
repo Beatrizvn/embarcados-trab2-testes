@@ -1,10 +1,11 @@
 import RPi.GPIO as GPIO
 
 class Motor():
-    def __init__(self) -> None:
-        self.DIR1_PIN = 20
-        self.DIR2_PIN = 21
-        self.PWM_PIN = 12
+    def __init__(self, id) -> None:
+        self.id = id
+        self.DIR1_PIN = 20 if id == 1 else 19
+        self.DIR2_PIN = 21 if id == 1 else 26
+        self.PWM_PIN = 12 if id == 1 else 13
         self.duty_cycle = 0
         self.__status = 'Livre'
         
@@ -22,34 +23,30 @@ class Motor():
     def subirElevador(self):
         GPIO.output(self.DIR1_PIN, GPIO.HIGH)
         GPIO.output(self.DIR2_PIN, GPIO.LOW)
-        #self.status = 'Subindo'
     
     def descerElevador(self):
         GPIO.output(self.DIR1_PIN, GPIO.LOW)
         GPIO.output(self.DIR2_PIN, GPIO.HIGH)
-        #self.status = 'Descendo'
     
     def breakElevador(self):
         GPIO.output(self.DIR1_PIN, GPIO.HIGH)
         GPIO.output(self.DIR2_PIN, GPIO.HIGH)
-        #self.status = 'Parado'
-    
-    def setStatus(self, estado):
-        self.status = estado
     
     def getStatus(self):
         return self.status
+    
+    def setStatus(self, estado):
+        self.status = estado
     
     def setDutyCycle(self, valor):
         self.pwm.ChangeDutyCycle(valor)
         
     def moveMotor(self, valor):
         self.setDutyCycle(abs(valor))
-        if valor < 0:
-            self.descerElevador()
-        elif valor > 0:
+        if valor > 0:
             self.subirElevador()
+        elif valor < 0:
+            self.descerElevador()
         else:
             self.breakElevador()
             self.setStatus('Parado')
-
