@@ -39,24 +39,16 @@ andares = ['ST', 'S1', 'S2', 'S3']
 
 def main():
     try:
-        # Start sensor threads (assuming sensor1 and sensor2 are already defined and have a start method)
         sensor1.start()
         sensor2.start()
         
-        # Start display status thread
-        # displayStatus_thread = threading.Thread(target=displayStatus)
-        # displayStatus_thread.start()
-        
         global elevador1_pos, elevador2_pos
-        # elevador1_pos = calibracao(elevador1, motor1, sensor1, pid1)
-        # elevador2_pos = calibracao(elevador2, motor2, sensor2, pid2)
         elevador1_pos = {'ST': 1800, 'S1': 5000, 'S2': 13000, 'S3': 19000}
         elevador2_pos = {'ST': 1800, 'S1': 5000, 'S2': 13000, 'S3': 19000}
 
-        # Start the alarm for recebeRegistradorElevador1 and recebeRegistradorElevador2
         set_alarm_display()
-        start_alarm_recebeRegistradorElevador1()
-        start_alarm_recebeRegistradorElevador2()
+        start_alarm_Elevador1()
+        start_alarm_recebeElevador2()
 
     except Exception as e:
         print(traceback.format_exc())
@@ -65,17 +57,18 @@ def main():
     except KeyboardInterrupt:
         encerra()
 
-def start_alarm_recebeRegistradorElevador1():
+def start_alarm_Elevador1():
     if running:
         threading.Timer(0.5, recebeRegistradorElevador1).start()
+
+def start_alarm_recebeElevador2():
+    if running:
+        threading.Timer(0.5, recebeRegistradorElevador2).start()
 
 def set_alarm_display():
     if running:
         threading.Timer(0.1, displayStatus).start()
 
-def start_alarm_recebeRegistradorElevador2():
-    if running:
-        threading.Timer(0.5, recebeRegistradorElevador2).start()
 
 def recebeRegistradorElevador1() -> None:
     global running, elevador1_movendo
@@ -94,7 +87,7 @@ def recebeRegistradorElevador1() -> None:
     
     # Schedule the next call
     if running:
-        start_alarm_recebeRegistradorElevador1()
+        start_alarm_Elevador1()
 
 
 def recebeRegistradorElevador2() -> None:
@@ -114,68 +107,51 @@ def recebeRegistradorElevador2() -> None:
     
     # Schedule the next call
     if running:
-        start_alarm_recebeRegistradorElevador1()
+        start_alarm_recebeElevador2()
+
+def moveElevador(elevador, motor, pid, posicoes, elevador_movendo, andar):
+    global running
+    elevador_movendo = True
+    pos_atual = comando('solicita_encoder', elevador=elevador)
+    
+    if pos_atual - posicoes[elevador] > 0:
+        motor.setStatus('Descendo')
+    elif pos_atual - posicoes[elevador] < 0:
+        motor.setStatus('Subindo')
+    else:
+        motor.setStatus('Parado')
+    
+    referencia = posicoes[elevador]
+    print("referencia", referencia)
+    pid.atualiza_referencia(referencia)
+    print(f'Elevador {elevador.id} indo para {andar}')
+    
+    potencia = pid.controle(pos_atual)
+    diff_posicao = 500
+    
+    while diff_posicao > 3 and running:
+        saida = comando('solicita_encoder', elevador=elevador)
+        potencia = pid.controle(saida)
+        motor.moveMotor(potencia)
+        comando('sinal_PWM', int(abs(potencia)), elevador=elevador)
+        diff_posicao = abs(saida - referencia)
+        time.sleep(0.2)  # Considerar um intervalo fixo ou variável dependendo do caso
+    
+    if running:
+        motor.setStatus('Parado')
+        motor.moveMotor(0)
+        desligaBotao(andar, elevador)
+        elevador.removeFila()
+        print('Porta aberta')
+        contagemPorta()
+        elevador_movendo = False
 
 def moveElevador1(andar):
-    global running, elevador1_movendo
-    elevador1_movendo = True
-    pos_atual = comando('solicita_encoder', elevador=elevador1)
-    if pos_atual - elevador1_pos[andar] > 0:
-        motor1.setStatus('Descendo')
-    elif pos_atual - elevador1_pos[andar] < 0:
-        motor1.setStatus('Subindo')
-    
-    referencia = elevador1_pos[andar]
-    print("referencia", referencia)
-    pid1.atualiza_referencia(referencia)
-    print(f'Elevador {elevador1.id} indo para {andar}')
-    potencia = pid1.controle(comando('solicita_encoder', elevador=elevador1))
-    diff_posicao = 500
-    while diff_posicao > 3 and running:
-        saida = comando('solicita_encoder', elevador=elevador1)
-        potencia = pid1.controle(saida)
-        motor1.moveMotor(potencia)
-        comando('sinal_PWM', int(abs(potencia)), elevador=elevador1)
-        diff_posicao = abs(saida - referencia)
-        time.sleep(0.2)
-    if running:
-        motor1.setStatus('Parado')
-        motor1.moveMotor(0)
-        desligaBotao(andar, elevador1)
-        elevador1.removeFila()
-        print('Porta aberta')
-        contagemPorta()  # aguarda 3 segundos para fechar a porta
-        elevador1_movendo = False
+    moveElevador(elevador1, motor1, pid1, elevador1_pos, elevador1_movendo, andar)
 
 def moveElevador2(andar):
-    global running, elevador2_movendo
-    elevador2_movendo = True
-    pos_atual = comando('solicita_encoder', elevador=elevador2)
-    if pos_atual - elevador2_pos[andar] > 0:
-        motor2.setStatus('Descendo')
-    elif pos_atual - elevador2_pos[andar] < 0:
-        motor2.setStatus('Subindo')
-    
-    referencia = elevador2_pos[andar]
-    pid2.atualiza_referencia(referencia)
-    print(f'Elevador {elevador2.id} indo para {andar}')
-    potencia = pid2.controle(comando('solicita_encoder', elevador=elevador2))
-    diff_posicao = 500
-    while diff_posicao > 3 and running:
-        saida = comando('solicita_encoder', elevador=elevador2)
-        potencia = pid2.controle(saida)
-        motor2.moveMotor(potencia)
-        comando('sinal_PWM', int(abs(potencia)), elevador=elevador2)
-        diff_posicao = abs(saida - referencia)
-        # time.sleep(0.2)
-    if running:
-        motor2.setStatus('Parado')
-        motor2.moveMotor(0)
-        desligaBotao(andar, elevador2)
-        elevador2.removeFila()
-        print('Porta aberta')
-        contagemPorta()  # aguarda 3 segundos para fechar a porta
-        elevador2_movendo = False
+    moveElevador(elevador2, motor2, pid2, elevador2_pos, elevador2_movendo, andar)
+
 
 def desligaBotao(andar, elevador):
     botoes = elevador.getAndarBotao()[andar]
@@ -223,6 +199,67 @@ def comando(mensagem, valor=0, botao=None, elevador=None):
                 uart.escreverEncoder(cmd, len(cmd))
                 uart.lerEncoder(5, True)
 
+def calibracao(elevador, motor, sensor, pid):
+    andares = ['ST', 'S1', 'S2', 'S3']
+    pos = {}
+    ENCODER_REF = 25000
+    CALIBRATION_SPEED_UP = 100
+    CALIBRATION_SPEED_DOWN = -100
+    SMALL_MOTOR_SPEED_UP = 5
+    SMALL_MOTOR_SPEED_DOWN = -5
+    SLEEP_TIME = 1
+
+    print(f'Calibrando elevador {elevador.id}')
+    motor.setStatus('Calibrando...')
+
+    # Solicita a posição do encoder
+    resp = comando('solicita_encoder', elevador=elevador)
+    if resp is None:
+        print("Erro: Não foi possível obter a posição do encoder.")
+        motor.moveMotor(0)
+        return pos
+
+    pid.atualiza_referencia(ENCODER_REF)
+
+    # Move o motor na direção correta
+    if ENCODER_REF - resp < resp:
+        motor.moveMotor(CALIBRATION_SPEED_UP)
+        while resp is not None and resp < ENCODER_REF:
+            resp = comando('solicita_encoder', elevador=elevador)
+        motor.moveMotor(0)
+        time.sleep(SLEEP_TIME)
+        print('descendo...')
+        motor.moveMotor(SMALL_MOTOR_SPEED_DOWN)
+    else:
+        motor.moveMotor(CALIBRATION_SPEED_DOWN)
+        while resp is not None and resp > 0:
+            resp = comando('solicita_encoder', elevador=elevador)
+        motor.moveMotor(0)
+        time.sleep(SLEEP_TIME)
+        print('subindo...')
+        motor.moveMotor(SMALL_MOTOR_SPEED_UP)
+
+    print('Procurando posições...')
+    print('[')
+    
+    while not all(key in pos for key in andares):
+        andar_detectado = sensor.active_sensor
+        if andar_detectado in andares and andar_detectado not in pos:
+            resp_list = []
+            while sensor.active_sensor == andar_detectado:
+                resp = comando('solicita_encoder', elevador=elevador)
+                if resp is not None:
+                    resp_list.append(resp)
+                
+            if resp_list:
+                pos_media = int(sum(resp_list) / len(resp_list))
+                pos[andar_detectado] = pos_media
+                print(f'Andar {andar_detectado}: {pos_media}')
+    
+    print(']\nCalibração finalizada\n')
+    motor.moveMotor(0)
+    return pos
+
 def displayStatus():
     global running
     # print('display iniciado...')
@@ -264,59 +301,6 @@ def displayStatus():
             set_alarm_display()
         
     display_oled.clear()
-
-def calibracao(elevador, motor, sensor, pid):
-    andares = ['ST', 'S1', 'S2', 'S3']
-    print(f'Calibrando elevador {elevador.id}')
-    motor.setStatus('Calibrando...')
-    pos = {}
-    resp = comando('solicita_encoder', elevador=elevador)
-    
-    if resp is None:
-        print("Erro: Não foi possível obter a posição do encoder.")
-        motor.moveMotor(0)
-        return pos
-    
-    pid.atualiza_referencia(25000)
-    
-    if 25000 - resp < resp:
-        motor.moveMotor(100)
-        while resp is not None and resp < 25000:
-            resp = comando('solicita_encoder', elevador=elevador)
-        motor.moveMotor(0)
-        time.sleep(1)
-        print('descendo...')
-        motor.moveMotor(-5)
-    else:
-        motor.moveMotor(-100)
-        while resp is not None and resp > 0:
-            resp = comando('solicita_encoder', elevador=elevador)
-        motor.moveMotor(0)
-        time.sleep(1)
-        print('subindo...')
-        motor.moveMotor(5)
-    
-    print('Procurando posições...')
-    print('[')
-    
-    while not all(key in pos for key in andares):
-        andar_detectado = sensor.active_sensor
-        if andar_detectado in andares and andar_detectado not in pos:
-            resp_list = []
-            while sensor.active_sensor == andar_detectado:
-                resp = comando('solicita_encoder', elevador=elevador)
-                if resp is not None:
-                    resp_list.append(resp)
-                
-            if len(resp_list) != 0:
-                pos_media = int(sum(resp_list) / len(resp_list))
-                pos[andar_detectado] = pos_media
-                print(f'Andar {andar_detectado}: {pos_media}')
-    
-    print(']\nCalibração finalizada\n')
-    motor.moveMotor(0)
-    return pos
-
 
 def botaoEmergencia():
     print('Emergência acionada!')
