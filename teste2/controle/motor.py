@@ -20,11 +20,11 @@ class Motor():
         self.pwm.start(0)  # duty cycle inicial de 0%
         self.status = 'Livre'
       
-    def subirElevador(self):
+    def upElevador(self):
         GPIO.output(self.DIR1_PIN, GPIO.HIGH)
         GPIO.output(self.DIR2_PIN, GPIO.LOW)
     
-    def descerElevador(self):
+    def downElevador(self):
         GPIO.output(self.DIR1_PIN, GPIO.LOW)
         GPIO.output(self.DIR2_PIN, GPIO.HIGH)
     
@@ -32,21 +32,21 @@ class Motor():
         GPIO.output(self.DIR1_PIN, GPIO.HIGH)
         GPIO.output(self.DIR2_PIN, GPIO.HIGH)
     
-    def getStatus(self):
-        return self.status
-    
     def setStatus(self, estado):
         self.status = estado
+    
+    def getStatus(self):
+        return self.status
     
     def setDutyCycle(self, valor):
         self.pwm.ChangeDutyCycle(valor)
         
     def moveMotor(self, valor):
         self.setDutyCycle(abs(valor))
-        if valor > 0:
-            self.subirElevador()
-        elif valor < 0:
-            self.descerElevador()
+        if valor < 0:
+            self.downElevador()
+        elif valor > 0:
+            self.upElevador()
         else:
             self.breakElevador()
             self.setStatus('Parado')
