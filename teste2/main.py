@@ -1,5 +1,5 @@
 from comunicacao.UART import Uart
-from comunicacao.ModBus import getCodigo
+from comunicacao.ModBus import getCodigo_E2, getCodigo_E1
 from controle.motor import Motor
 from controle.pid import PID
 from controle.sensor import Sensor
@@ -43,11 +43,18 @@ def main():
         # Start sensor threads (assuming sensor1 and sensor2 are already defined and have a start method)
         sensor1.start()
         sensor2.start()
-
+        
+        # Start display status thread
+        # displayStatus_thread = threading.Thread(target=displayStatus)
+        # displayStatus_thread.start()
+        
         global elevador1_pos, elevador2_pos
+        # elevador1_pos = calibracao(elevador1, motor1, sensor1, pid1)
+        # elevador2_pos = calibracao(elevador2, motor2, sensor2, pid2)
         elevador1_pos = {'ST': 1800, 'S1': 5000, 'S2': 13000, 'S3': 19000}
         elevador2_pos = {'ST': 1800, 'S1': 5000, 'S2': 13000, 'S3': 19000}
 
+        # Start the alarm for recebeRegistradorElevador1 and recebeRegistradorElevador2
         set_alarm_display()
         start_alarm_recebeRegistradorElevador1()
         start_alarm_recebeRegistradorElevador2()
@@ -108,7 +115,7 @@ def recebeRegistradorElevador2() -> None:
     
     # Schedule the next call
     if running:
-        start_alarm_recebeRegistradorElevador2()
+        start_alarm_recebeRegistradorElevador1()
 
 def moveElevador1(andar):
     global running, elevador1_movendo
@@ -161,7 +168,7 @@ def moveElevador2(andar):
         motor2.moveMotor(potencia)
         comando('sinal_PWM', int(abs(potencia)), elevador=elevador2)
         diff_posicao = abs(saida - referencia)
-        time.sleep(0.2)
+        # time.sleep(0.2)
     if running:
         motor2.setStatus('Parado')
         motor2.moveMotor(0)
@@ -179,10 +186,9 @@ def desligaBotao(andar, elevador):
 
 def comando(mensagem, valor=0, botao=None, elevador=None):
     if running:
-        endereco = 'E1' if elevador.id == 1 else 'E2'
         if mensagem == 'solicita_encoder':
             with uart_lock:
-                cmd = getCodigo(endereco, mensagem)
+                cmd = getCodigo_E1(mensagem) if elevador.id == 1 else getCodigo_E2(mensagem)
                 uart.escreverEncoder(cmd, len(cmd))
                 response = uart.lerEncoder()
                 
@@ -198,15 +204,22 @@ def comando(mensagem, valor=0, botao=None, elevador=None):
 
         elif mensagem == 'sinal_PWM' or mensagem == 'temperatura':
             with uart_lock:
-                cmd = getCodigo(endereco, mensagem, valor)
+                cmd = getCodigo_E1(mensagem, valor) if elevador.id == 1 else getCodigo_E2(mensagem, valor)
                 uart.escreverEncoder(cmd, len(cmd), skip_resp=True)
                 # uart.lerEncoder(5)
 
+        # elif mensagem == 'temperatura':
+        #     with uart_lock:
+        #         cmd = getCodigo_E1(mensagem, valor) if elevador.id == 1 else getCodigo_E2(mensagem, valor)
+        #         uart.escreverEncoder(cmd, len(cmd))
+        #         uart.lerEncoder(5)
+                
         elif mensagem == 'le_registrador':
             with uart_lock:
-                cmd = getCodigo(endereco, mensagem)
+                cmd = getCodigo_E1(mensagem) if elevador.id == 1 else getCodigo_E2(mensagem)
                 uart.escreverEncoder(cmd, len(cmd))
                 response = uart.lerEncoder(15, True)
+                # print(response)
                 if isinstance(response, str):
                     response = response.encode('utf-8')
                 
@@ -214,12 +227,13 @@ def comando(mensagem, valor=0, botao=None, elevador=None):
                 
         elif mensagem == 'escreve_registrador':
             with uart_lock:
-                cmd = getCodigo(endereco, mensagem, valor, botao)
+                cmd = getCodigo_E1(mensagem, valor, botao) if elevador.id == 1 else getCodigo_E2(mensagem, valor, botao)
                 uart.escreverEncoder(cmd, len(cmd))
                 uart.lerEncoder(5, True)
 
 def displayStatus():
     global running
+    # print('display iniciado...')
     display_oled.clear()
     andar1 = andar2 = -1
     if running:
@@ -252,6 +266,8 @@ def displayStatus():
             comando('temperatura', temperatura1, elevador=elevador1)
             comando('temperatura', temperatura2, elevador=elevador2)
         
+        # time.sleep(1)
+
         if running:
             set_alarm_display()
         
