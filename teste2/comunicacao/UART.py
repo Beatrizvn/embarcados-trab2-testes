@@ -19,13 +19,11 @@ class Uart:
         if self.serial is not None and not self.serial.is_open:
             self.serial.open()
             self.connected = True
-            # print('Abrindo a UART')
 
     def desconectar(self) -> None:
         if self.serial is not None and self.serial.is_open:
             self.serial.close()
             self.connected = False
-            # print('Fechando a UART')
 
     def validate_crc(self, buffer, buffer_size):
         crc_size = 2
@@ -37,20 +35,16 @@ class Uart:
 
     def lerEncoder(self, tam=9, botao=False):
         try:
-            # print("conexao leitura")
             self.conectar()
             if not self.serial.is_open:
                 print('Erro: UART não está aberta.')
                 return b''
-
-            # if self.serial.reset_output_buffer()        
 
             buffer = self.serial.read(tam)
             if len(buffer) == 0:
                 print("Nenhum dado recebido, possivelmente timeout.")
                 return b''
 
-            # print("tchau")
             tamanho = len(buffer)
             dados = buffer[3:-2] if not botao else buffer[2:-2]
 
@@ -69,12 +63,10 @@ class Uart:
 
     def escreverEncoder(self, msg, tam, skip_resp=False) -> None:
         try:
-            # print("conexao escrita")
             msg_crc = calcula_crc(msg, tam).to_bytes(2, 'little')
             msg_final = msg + msg_crc
             self.conectar()
             self.serial.write(msg_final)
-            # print("escrevendo")
         except Exception as e:
             print(f'Erro ao escrever: {str(e)}')
         finally:

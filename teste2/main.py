@@ -43,18 +43,11 @@ def main():
         # Start sensor threads (assuming sensor1 and sensor2 are already defined and have a start method)
         sensor1.start()
         sensor2.start()
-        
-        # Start display status thread
-        # displayStatus_thread = threading.Thread(target=displayStatus)
-        # displayStatus_thread.start()
-        
+
         global elevador1_pos, elevador2_pos
-        # elevador1_pos = calibracao(elevador1, motor1, sensor1, pid1)
-        # elevador2_pos = calibracao(elevador2, motor2, sensor2, pid2)
         elevador1_pos = {'ST': 1800, 'S1': 5000, 'S2': 13000, 'S3': 19000}
         elevador2_pos = {'ST': 1800, 'S1': 5000, 'S2': 13000, 'S3': 19000}
 
-        # Start the alarm for recebeRegistradorElevador1 and recebeRegistradorElevador2
         set_alarm_display()
         start_alarm_recebeRegistradorElevador1()
         start_alarm_recebeRegistradorElevador2()
@@ -115,7 +108,7 @@ def recebeRegistradorElevador2() -> None:
     
     # Schedule the next call
     if running:
-        start_alarm_recebeRegistradorElevador1()
+        start_alarm_recebeRegistradorElevador2()
 
 def moveElevador1(andar):
     global running, elevador1_movendo
