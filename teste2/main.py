@@ -1,5 +1,5 @@
 from comunicacao.UART import Uart
-from comunicacao.ModBus import getCodigo_E1, getCodigo_E2
+from comunicacao.ModBus import getCodigo
 from controle.motor import Motor
 from controle.pid import PID
 from controle.sensor import Sensor
@@ -163,7 +163,7 @@ def comando(mensagem, valor=0, botao=None, elevador=None):
     if running:
         if mensagem == 'solicita_encoder':
             with uart_lock:
-                cmd = getCodigo_E1(mensagem) if elevador.id == 1 else getCodigo_E2(mensagem)
+                cmd = getCodigo("E1", mensagem) if elevador.id == 1 else getCodigo("E2", mensagem)
                 uart.escreverEncoder(cmd, len(cmd))
                 response = uart.lerEncoder()
                 
@@ -179,12 +179,12 @@ def comando(mensagem, valor=0, botao=None, elevador=None):
 
         elif mensagem == 'sinal_PWM' or mensagem == 'temperatura':
             with uart_lock:
-                cmd = getCodigo_E1(mensagem, valor) if elevador.id == 1 else getCodigo_E2(mensagem, valor)
+                cmd = getCodigo("E1",mensagem, valor) if elevador.id == 1 else getCodigo("E2",mensagem, valor)
                 uart.escreverEncoder(cmd, len(cmd), skip_resp=True)
                 
         elif mensagem == 'le_registrador':
             with uart_lock:
-                cmd = getCodigo_E1(mensagem) if elevador.id == 1 else getCodigo_E2(mensagem)
+                cmd = getCodigo("E1",mensagem) if elevador.id == 1 else getCodigo("E2",mensagem)
                 uart.escreverEncoder(cmd, len(cmd))
                 response = uart.lerEncoder(15, True)
                 # print(response)
@@ -195,7 +195,7 @@ def comando(mensagem, valor=0, botao=None, elevador=None):
                 
         elif mensagem == 'escreve_registrador':
             with uart_lock:
-                cmd = getCodigo_E1(mensagem, valor, botao) if elevador.id == 1 else getCodigo_E2(mensagem, valor, botao)
+                cmd = getCodigo("E1",mensagem, valor, botao) if elevador.id == 1 else getCodigo("E2",mensagem, valor, botao)
                 uart.escreverEncoder(cmd, len(cmd))
                 uart.lerEncoder(5, True)
 
