@@ -1,13 +1,14 @@
 import threading
 import time
+from .config import ANDARES_BOTOES, ORDENS_BOTOES
 
 class Elevador():
     def __init__(self, id) -> None:
         self.id = id
         self.__fila = []
         self.registradores = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-        self.ordem_botao = ['BTS', 'B1D', 'B1S', 'B2D', 'B2S', 'B3D', 'BE', 'BT', 'B1', 'B2', 'B3']
-        self.andar_botao = {'ST': ['BTS', 'BT'], 'S1': ['B1D', 'B1S', 'B1'], 'S2': ['B2D', 'B2S', 'B2'], 'S3': ['B3D', 'B3']}
+        self.ordem_botao = ORDENS_BOTOES
+        self.andar_botao = ANDARES_BOTOES
         
     def insereFila(self, andar):
         print(f'Elevador {self.id} insere {andar}')
@@ -45,4 +46,3 @@ class Elevador():
             self.insereFila('S3')
         if lista_andar[6] == 1:
             self.__fila = ['emergency']
-

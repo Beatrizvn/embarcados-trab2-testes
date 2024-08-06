@@ -81,9 +81,9 @@ def mover_elevador1(andar):
     elevador1_movendo = True
     pos_atual = comandos('solicita_encoder', elevador=elevador1)
     if pos_atual - elevador1_pos[andar] > 0:
-        motor1.setStatus('Descendo')
+        motor1.set_status('Descendo')
     elif pos_atual - elevador1_pos[andar] < 0:
-        motor1.setStatus('Subindo')
+        motor1.set_status('Subindo')
     
     referencia = elevador1_pos[andar]
     pid1.atualiza_referencia(referencia)
@@ -97,15 +97,17 @@ def mover_elevador1(andar):
     while diff_posicao > 3 and running:
         saida = comandos('solicita_encoder', elevador=elevador1)
         potencia = pid1.controle(saida)
-        motor1.moveMotor(potencia)
+        motor1.move_motor(potencia)
 
         comandos('sinal_PWM', int(abs(potencia)), elevador=elevador1)
         diff_posicao = abs(saida - referencia)
         time.sleep(0.2)
+
     if running:
-        motor1.setStatus('Parado')
-        motor1.moveMotor(0)
+        motor1.set_status('Parado')
+        motor1.move_motor(0)
         desligaBotao(andar, elevador1)
+
         elevador1.removeFila()
         print('Porta aberta')
         contagemPorta()  
@@ -134,9 +136,9 @@ def mover_elevador2(andar):
     elevador2_movendo = True
     pos_atual = comandos('solicita_encoder', elevador=elevador2)
     if pos_atual - elevador2_pos[andar] > 0:
-        motor2.setStatus('Descendo')
+        motor2.set_status('Descendo')
     elif pos_atual - elevador2_pos[andar] < 0:
-        motor2.setStatus('Subindo')
+        motor2.set_status('Subindo')
     
     referencia = elevador2_pos[andar]
     pid2.atualiza_referencia(referencia)
@@ -146,13 +148,13 @@ def mover_elevador2(andar):
     while diff_posicao > 3 and running:
         saida = comandos('solicita_encoder', elevador=elevador2)
         potencia = pid2.controle(saida)
-        motor2.moveMotor(potencia)
+        motor2.move_motor(potencia)
 
         comandos('sinal_PWM', int(abs(potencia)), elevador=elevador2)
         diff_posicao = abs(saida - referencia)
     if running:
-        motor2.setStatus('Parado')
-        motor2.moveMotor(0)
+        motor2.set_status('Parado')
+        motor2.move_motor(0)
         desligaBotao(andar, elevador2)
         elevador2.removeFila()
         print('Porta aberta')
@@ -164,6 +166,7 @@ def desligaBotao(andar, elevador):
     print("botoes: ", botoes)
     for botao in botoes:
         comandos('escreve_registrador', botao=botao, elevador=elevador)
+
 
 def comandos(comando, valor=0, botao=None, elevador=None):
     if running:
@@ -232,16 +235,16 @@ def displayStatus():
         if len(elevador1.getFila()) != 0:
             andar1 = elevador1.getFila()[0]
             andar1 = andar1.replace('S', 'A')
-            display_oled.display_string(f'Elevador 1: {motor1.getStatus()}: {andar1}', 0)
+            display_oled.display_string(f'Elevador 1: {motor1.get_status()}: {andar1}', 0)
         else:
-            display_oled.display_string(f'Elevador 1: {motor1.getStatus()}', 0)
+            display_oled.display_string(f'Elevador 1: {motor1.get_status()}', 0)
         
         if len(elevador2.getFila()) != 0:
             andar2 = elevador2.getFila()[0]
             andar2 = andar2.replace('S', 'A')
-            display_oled.display_string(f'Elevador 2: {motor2.getStatus()}: {andar2}', 2)
+            display_oled.display_string(f'Elevador 2: {motor2.get_status()}: {andar2}', 2)
         else:
-            display_oled.display_string(f'Elevador 2: {motor2.getStatus()}', 2)
+            display_oled.display_string(f'Elevador 2: {motor2.get_status()}', 2)
         
         if running:
             set_alarm_display()

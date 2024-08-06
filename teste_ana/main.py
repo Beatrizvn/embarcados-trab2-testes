@@ -118,7 +118,7 @@ def moveElevador(elevador_id, andar):
     while running:
         saida = comando('solicita_encoder', elevador=elevador)
         potencia = pid.controle(saida)
-        motor.moveMotor(potencia)
+        motor.move_motor(potencia)
         comando('sinal_PWM', int(abs(potencia)), elevador=elevador)
         
         if abs(saida - referencia) <= 3:
@@ -128,7 +128,7 @@ def moveElevador(elevador_id, andar):
     
     if running:
         motor.setStatus('Parado')
-        motor.moveMotor(0)
+        motor.move_motor(0)
         desligaBotao(andar, elevador)
         elevador.removeFila()
         print('Porta aberta')
@@ -204,25 +204,25 @@ def calibracao(elevador, motor, sensor, pid):
     
     if resp is None:
         print("Erro: Não foi possível obter a posição do encoder.")
-        motor.moveMotor(0)
+        motor.move_motor(0)
         return pos
     
     pid.atualiza_referencia(25000)
     
     if 25000 - resp < resp:
-        motor.moveMotor(100)
+        motor.move_motor(100)
         while resp is not None and resp < 25000:
             resp = comando('solicita_encoder', elevador=elevador)
-        motor.moveMotor(0)
+        motor.move_motor(0)
         time.sleep(1)
-        motor.moveMotor(-5)
+        motor.move_motor(-5)
     else:
-        motor.moveMotor(-100)
+        motor.move_motor(-100)
         while resp is not None and resp > 0:
              resp = comando('solicita_encoder', elevador=elevador)
-        motor.moveMotor(0)
+        motor.move_motor(0)
         time.sleep(1)
-        motor.moveMotor(5)
+        motor.move_motor(5)
     
     print('Procurando posições...')
     print('[')
@@ -242,7 +242,7 @@ def calibracao(elevador, motor, sensor, pid):
                 print(f'Andar {andar_detectado}: {pos_media}')
     
     print(']\nCalibração finalizada\n')
-    motor.moveMotor(0)
+    motor.move_motor(0)
     return pos
 
 def botaoEmergencia():
