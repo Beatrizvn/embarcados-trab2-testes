@@ -1,15 +1,17 @@
-from teste_ana.comunicacao.uart import Uart
-from teste_ana.comunicacao.modbus import getCodigo_E2, getCodigo_E1
+from comunicacao.uart import Uart
+from comunicacao.modbus import getCodigo_E2, getCodigo_E1
 from controle.motor import Motor
 from controle.pid import PID
 from controle.sensor import Sensor
 from controle.elevador import Elevador
-from i2c.bmp280_device import BMP280Device
-from i2c.oled_display import OLEDDisplay
+from i2c.bmp280_device import bmp280_device
+from i2c.oled_display import OLED
 import time
 import struct
 import threading
 import traceback
+import os
+
 
 # Configurações iniciais
 elevadores = {}
