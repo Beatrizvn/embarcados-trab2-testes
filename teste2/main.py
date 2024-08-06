@@ -115,30 +115,34 @@ def recebeRegistradorElevador2() -> None:
     
     # Schedule the next call
     if running:
-        start_alarm_recebeRegistradorElevador1()
+        start_alarm_recebeRegistradorElevador2()
 
 def moveElevador1(andar):
     global running, elevador1_movendo
     elevador1_movendo = True
     pos_atual = comando('solicita_encoder', elevador=elevador1)
-    if pos_atual - elevador1_pos[andar] > 0:
+    referencia = elevador1_pos[andar]
+    
+    if pos_atual > referencia:
         motor1.setStatus('Descendo')
-    elif pos_atual - elevador1_pos[andar] < 0:
+    elif pos_atual < referencia:
         motor1.setStatus('Subindo')
     
-    referencia = elevador1_pos[andar]
-    print("referencia", referencia)
     pid1.atualiza_referencia(referencia)
     print(f'Elevador {elevador1.id} indo para {andar}')
-    potencia = pid1.controle(comando('solicita_encoder', elevador=elevador1))
-    diff_posicao = 500
-    while diff_posicao > 3 and running:
+    
+    while running:
         saida = comando('solicita_encoder', elevador=elevador1)
         potencia = pid1.controle(saida)
         motor1.moveMotor(potencia)
         comando('sinal_PWM', int(abs(potencia)), elevador=elevador1)
+        
         diff_posicao = abs(saida - referencia)
+        if diff_posicao <= 3:
+            break
+        
         time.sleep(0.2)
+    
     if running:
         motor1.setStatus('Parado')
         motor1.moveMotor(0)
@@ -152,23 +156,28 @@ def moveElevador2(andar):
     global running, elevador2_movendo
     elevador2_movendo = True
     pos_atual = comando('solicita_encoder', elevador=elevador2)
-    if pos_atual - elevador2_pos[andar] > 0:
+    referencia = elevador2_pos[andar]
+    
+    if pos_atual > referencia:
         motor2.setStatus('Descendo')
-    elif pos_atual - elevador2_pos[andar] < 0:
+    elif pos_atual < referencia:
         motor2.setStatus('Subindo')
     
-    referencia = elevador2_pos[andar]
     pid2.atualiza_referencia(referencia)
     print(f'Elevador {elevador2.id} indo para {andar}')
-    potencia = pid2.controle(comando('solicita_encoder', elevador=elevador2))
-    diff_posicao = 500
-    while diff_posicao > 3 and running:
+    
+    while running:
         saida = comando('solicita_encoder', elevador=elevador2)
         potencia = pid2.controle(saida)
         motor2.moveMotor(potencia)
         comando('sinal_PWM', int(abs(potencia)), elevador=elevador2)
+        
         diff_posicao = abs(saida - referencia)
-        # time.sleep(0.2)
+        if diff_posicao <= 3:
+            break
+        
+        time.sleep(0.2)
+    
     if running:
         motor2.setStatus('Parado')
         motor2.moveMotor(0)
@@ -206,20 +215,12 @@ def comando(mensagem, valor=0, botao=None, elevador=None):
             with uart_lock:
                 cmd = getCodigo_E1(mensagem, valor) if elevador.id == 1 else getCodigo_E2(mensagem, valor)
                 uart.escreverEncoder(cmd, len(cmd), skip_resp=True)
-                # uart.lerEncoder(5)
-
-        # elif mensagem == 'temperatura':
-        #     with uart_lock:
-        #         cmd = getCodigo_E1(mensagem, valor) if elevador.id == 1 else getCodigo_E2(mensagem, valor)
-        #         uart.escreverEncoder(cmd, len(cmd))
-        #         uart.lerEncoder(5)
                 
         elif mensagem == 'le_registrador':
             with uart_lock:
                 cmd = getCodigo_E1(mensagem) if elevador.id == 1 else getCodigo_E2(mensagem)
                 uart.escreverEncoder(cmd, len(cmd))
                 response = uart.lerEncoder(15, True)
-                # print(response)
                 if isinstance(response, str):
                     response = response.encode('utf-8')
                 
