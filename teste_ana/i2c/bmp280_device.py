@@ -1,6 +1,6 @@
 from bmp280 import BMP280
 import smbus2
-from utils.exceptions import SensorError
+from comunicacao.utils import SensorError
 
 class BMP280Device:
     def __init__(self, bus_number=1):
