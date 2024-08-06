@@ -40,12 +40,9 @@ class Motor():
     
     def getStatus(self):
         return self.status
-    
-    def setDutyCycle(self, valor):
-        self.pwm.ChangeDutyCycle(valor)
         
     def moveMotor(self, valor):
-        self.setDutyCycle(abs(valor))
+        self.pwm.ChangeDutyCycle(valor)
         if valor < 0:
             self.downElevador()
         elif valor > 0:
