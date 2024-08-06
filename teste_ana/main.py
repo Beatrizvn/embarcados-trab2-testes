@@ -4,8 +4,8 @@ from controle.motor import Motor
 from controle.pid import PID
 from controle.sensor import Sensor
 from controle.elevador import Elevador
-from i2c.bmp280_device import BMP280Device
-from i2c.oled_display import OLEDDisplay
+from i2c.bmp280_device import bmp280_device
+from i2c.oled_display import OLED
 import time
 import struct
 import threading
