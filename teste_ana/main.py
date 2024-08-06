@@ -1,5 +1,5 @@
 from comunicacao.uart import Uart
-from comunicacao.modbus import getCodigo_E2, getCodigo_E1
+from comunicacao.modbus import getCodigo_E1, getCodigo_E2  
 from controle.motor import Motor
 from controle.pid import PID
 from controle.sensor import Sensor
