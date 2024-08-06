@@ -3,11 +3,10 @@ import smbus2
 
 class bmp280_device:
     def __init__(self):
-        self.bus = smbus2.SMBus(1) # para rasp 3
+        self.bus = smbus2.SMBus(1) 
         self.bmp280 = BMP280(i2c_dev=self.bus)
         
     def get_temp(self):
-        #return round(self.bmp280.get_temperature(), 2)
         try:
             return round(self.bmp280.get_temperature(), 2)
         except:

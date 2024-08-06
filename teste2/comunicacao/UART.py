@@ -38,7 +38,7 @@ def crc16(crc, data):
 
     return ((crc & 0xFF00) >> 8) ^ tbl[(crc & 0x00FF) ^ (data & 0x00FF)]
 
-def calcula_crc(cmd, size):
+def calculo_crc(cmd, size):
     crc = 0
     for i in range(0, size):
         crc = crc16(crc, cmd[i])
@@ -70,7 +70,7 @@ class Uart:
         if len(buffer) < crc_size:
             return False
         crc_buf = buffer[-crc_size:]
-        crc = calcula_crc(buffer[:-crc_size], buffer_size - crc_size).to_bytes(crc_size, 'little')
+        crc = calculo_crc(buffer[:-crc_size], buffer_size - crc_size).to_bytes(crc_size, 'little')
         return crc_buf == crc
 
     def lerEncoder(self, tam=9, botao=False):
@@ -82,7 +82,7 @@ class Uart:
 
             buffer = self.serial.read(tam)
             if len(buffer) == 0:
-                print("Nenhum dado recebido, possivelmente timeout.")
+                print("Sem dados recebidos")
                 return b''
 
             tamanho = len(buffer)
@@ -103,7 +103,7 @@ class Uart:
 
     def escreverEncoder(self, msg, tam, skip_resp=False) -> None:
         try:
-            msg_crc = calcula_crc(msg, tam).to_bytes(2, 'little')
+            msg_crc = calculo_crc(msg, tam).to_bytes(2, 'little')
             msg_final = msg + msg_crc
             self.conectar()
             self.serial.write(msg_final)

@@ -6,7 +6,6 @@ class Elevador():
         self.id = id
         self.__fila = []
         self.registradores = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-        # self.ordem_botao = ['BTS', 'B1D', 'B1S', 'B2D', 'B2S', 'B3D', 'BEmergencia', 'BT', 'B1', 'B2', 'B3']
         self.ordem_botao = ['BTS', 'B1D', 'B1S', 'B2D', 'B2S', 'B3D', 'BE', 'BT', 'B1', 'B2', 'B3']
         self.andar_botao = {'ST': ['BTS', 'BT'], 'S1': ['B1D', 'B1S', 'B1'], 'S2': ['B2D', 'B2S', 'B2'], 'S3': ['B3D', 'B3']}
         
@@ -38,12 +37,12 @@ class Elevador():
         
         if any(lista_andar[i] == 1 and 'ST' not in self.__fila for i in terreo_indice):
             self.insereFila('ST')
-        elif any(lista_andar[i] == 1 and 'S1' not in self.__fila for i in primeiro_indice):
+        if any(lista_andar[i] == 1 and 'S1' not in self.__fila for i in primeiro_indice):
             self.insereFila('S1')
-        elif any(lista_andar[i] == 1 and 'S2' not in self.__fila for i in segundo_indice):
+        if any(lista_andar[i] == 1 and 'S2' not in self.__fila for i in segundo_indice):
             self.insereFila('S2')
-        elif any(lista_andar[i] == 1 and 'S3' not in self.__fila for i in terceiro_indice):
+        if any(lista_andar[i] == 1 and 'S3' not in self.__fila for i in terceiro_indice):
             self.insereFila('S3')
-        elif lista_andar[6] == 1:
+        if lista_andar[6] == 1:
             self.__fila = ['emergency']
-        # self.registradores = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+

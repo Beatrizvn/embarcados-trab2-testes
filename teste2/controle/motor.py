@@ -3,6 +3,8 @@ import RPi.GPIO as GPIO
 class Motor():
     def __init__(self, id) -> None:
         self.id = id
+        
+        # Definindo os pinos com base no ID do motor
         self.DIR1_PIN = 20 if id == 1 else 19
         self.DIR2_PIN = 21 if id == 1 else 26
         self.PWM_PIN = 12 if id == 1 else 13
@@ -16,8 +18,9 @@ class Motor():
         GPIO.setup(self.DIR2_PIN, GPIO.OUT)
         GPIO.setup(self.PWM_PIN, GPIO.OUT)
         
-        self.pwm = GPIO.PWM(self.PWM_PIN, 1000)  # 1000 Hz de frequência inicial
-        self.pwm.start(0)  # duty cycle inicial de 0%
+        # Configura o PWM no pino PWM_PIN com frequência de 1000 Hz
+        self.pwm = GPIO.PWM(self.PWM_PIN, 1000)  
+        self.pwm.start(0) 
         self.status = 'Livre'
       
     def upElevador(self):
